@@ -932,7 +932,9 @@ function bindPanel() {
         else obj[key] = raw;
         if (root === "skin" && key === "hullName") S.cur.ship.hullName = raw || S.cur.base.hullName;
         if ((root === "skin" || root === "ship") && key === "spriteName") loadShipSprite(S.cur);
+        if (root === "sel" && key === "type" && raw === "LAUNCH_BAY" && S.sel.kind === "slot") makeBay(obj);
         if (t) {
+          if (key === "type" && raw === "LAUNCH_BAY") makeBay(t);
           if (key === "angle") t.angle = -raw;
           else if (/^\d+$/.test(key)) { const l = loc(t), k = +key; if (k < l.length) l[k] = k % 2 ? -raw : raw; }
           else t[key] = raw;
@@ -945,6 +947,13 @@ function bindPanel() {
     localStorage.setItem("forge.autoBounds", JSON.stringify(AB));
   }));
   document.querySelectorAll("#ship-detail [data-act], #pop [data-act]").forEach((b) => (b.onclick = (ev) => { ev.stopPropagation(); ACTIONS[b.dataset.act](b.dataset, ev); }));
+}
+/** A launch bay is always a hidden mount and can't hold a weapon (fitted or built-in). */
+function makeBay(slot) {
+  slot.mount = "HIDDEN";
+  const sh = S.cur.ship;
+  if (sh.builtInWeapons && slot.id in sh.builtInWeapons) delete sh.builtInWeapons[slot.id];
+  for (const g of (S.cur.variant && S.cur.variant.weaponGroups) || []) delete (g.weapons || {})[slot.id];
 }
 /** Keeps fitted and built-in weapons attached when a slot is renamed. */
 function renameSlot(from, to) {
@@ -1075,14 +1084,17 @@ function slotForm(o) {
       <label>#${k + 1} ${S.sel.p === k ? "◀" : ""}</label><div class="row" style="gap:4px"><input data-bind="sel.locations.${k * 2}" data-num data-twin value="${l[k * 2]}"><input data-bind="sel.locations.${k * 2 + 1}" data-num data-twin value="${l[k * 2 + 1]}">
       ${l.length > 2 ? `<button data-act="removeBayPoint" data-k="${k}" title="Remove this point">✕</button>` : ""}</div>`).join("")}</div>
       <div class="btnrow"><button data-act="addBayPoint">Add launch point</button></div>
-      <div class="muted" style="font-size:11px">Fighters launch from these points. Drag them on the ship like any slot.</div>` : "";
+      <div class="muted" style="font-size:11px">Fighters launch from these points. Drag them on the ship like any slot.</div>
+      <div class="muted" style="font-size:11px;margin-top:6px">A launch bay is always a hidden mount, and size, angle and arc have no effect on it, so they aren't shown.
+        Ids like <code>WS 012</code> are normal: the game names bays the same way as weapon slots.
+        How many wings the ship carries is set by <b>Fighter bays</b> in its stats (${fighterBays()} now); bay slots only set where fighters launch from.</div>` : "";
   return `<h4><span style="color:${slotColor(o.type)}">●</span> Slot ${esc(o.id)}<span class="spacer"></span><button data-act="closePop" title="Close (Esc)">✕</button></h4>
     ${bay ? "" : weaponCard(o)}<div class="form" style="margin-top:8px">
       ${field("Id", "sel.id", o.id, S.cur.isSkin ? "readonly title='Skins can't rename slots'" : "")}
       <label>Type</label><select data-bind="sel.type" data-twin>${opt(SLOT_TYPES, o.type)}</select>
-      <label>Size</label><select data-bind="sel.size" data-twin>${opt(SIZES, o.size)}</select>
+      ${bay ? "" : `<label>Size</label><select data-bind="sel.size" data-twin>${opt(SIZES, o.size)}</select>
       <label>Mount</label><select data-bind="sel.mount" data-twin>${opt(MOUNTS, o.mount)}</select>
-      ${nfield("Angle", "sel.angle", o.angle)}${nfield("Arc", "sel.arc", o.arc)}
+      ${nfield("Angle", "sel.angle", o.angle)}${nfield("Arc", "sel.arc", o.arc)}`}
       ${bay ? "" : nfield("Forward (x)", "sel.locations.0", loc(o)[0]) + nfield("Left (y)", "sel.locations.1", loc(o)[1])}
       ${nfield("Render order", "sel.renderOrderMod", o.renderOrderMod ?? 0)}
     </div>${bayPts}
@@ -1095,8 +1107,8 @@ function slotsPanel() {
   const sh = S.cur.ship;
   return `<p class="muted">Click a slot on the ship to edit it in place. Shift+click empty space to add one.</p><h3>Slots (${sh.weaponSlots.length})</h3><div class="chips">${sh.weaponSlots.map((s, i) => `
     <div class="chip${S.sel && S.sel.kind === "slot" && S.sel.i === i ? " sel" : ""}" data-act="selectSlot" data-i="${i}">
-      <span style="color:${slotColor(s.type)}">●</span><span class="grow">${esc(s.id)} · ${esc(s.size)} ${esc(s.type)} ${esc(s.mount)}</span>
-      <span class="muted">${esc(s.arc)}°</span></div>`).join("")}</div>`;
+      <span style="color:${slotColor(s.type)}">●</span><span class="grow">${esc(s.id)} · ${s.type === "LAUNCH_BAY" ? `launch bay · ${Math.max(1, Math.floor(loc(s).length / 2))} point(s)` : `${esc(s.size)} ${esc(s.type)} ${esc(s.mount)}`}</span>
+      <span class="muted">${s.type === "LAUNCH_BAY" ? "" : esc(s.arc) + "°"}</span></div>`).join("")}</div>`;
 }
 
 // ---------------------------------------------------------------- engines
