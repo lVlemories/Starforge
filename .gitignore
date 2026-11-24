@@ -1,0 +1,13 @@
+# build output
+editor/build/
+editor/build-browser/
+editor/*.jar
+data-export-mod/build/
+data-export-mod/jars/
+dist/
+__pycache__/
+# editor runtime files
+starforge-settings.json
+forge-settings.json
+starsector-path.txt
+backups/

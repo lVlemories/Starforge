@@ -1,0 +1,13 @@
+{
+  "id": "forge_data_export",
+  "name": "Starforge Data Export",
+  "author": "Claude",
+  "utility": "true",
+  "version": "1.0.1",
+  "description": "Optional helper for the Starforge ship editor. On game start it saves the values shown in hullmod descriptions (the %s numbers) to saves/common/forge_bridge/hullmods.json so the editor can display them. Adds nothing to the game itself.",
+  "gameVersion": "0.98.5a-RC7",
+  "jars": [
+    "jars/forge_data_export.jar"
+  ],
+  "modPlugin": "forgeexport.ForgeDataExportPlugin"
+}
