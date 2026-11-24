@@ -82,5 +82,4 @@ You may use, share and modify it. Modified versions you distribute must stay und
 - Written by Claude (Anthropic).
 - Engine flame textures from [Ship-Editor](https://github.com/Ontheheavens/Ship-Editor) by Ontheheavens (public domain),
   which also inspired the engine and slot editing.
-- Inspired by Daedalus Forge.
 - Starsector is © Fractal Softworks. Starforge contains no game files; it reads them from your own install.
