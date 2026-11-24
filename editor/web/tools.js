@@ -769,7 +769,6 @@ const GUIDE = [
     <p>The complete source code is published on GitHub in the Starforge repository, alongside the downloads.</p>
     <h3>Credits</h3><ul>
     <li>Engine flame textures from <b>Ship-Editor</b> by Ontheheavens (public domain, Unlicense), whose engine and slot editing also inspired parts of this editor.</li>
-    <li>Inspired by <b>Daedalus Forge</b>.</li>
     <li>Starsector is © Fractal Softworks. The editor contains no game files: it reads them from your own install.</li></ul>`],
 ];
 function openGuide() {

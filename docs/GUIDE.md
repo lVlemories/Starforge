@@ -295,5 +295,5 @@ The complete source is on GitHub, in the Starforge repository the downloads come
 `source` folder if your copy has one). The repository's README explains how to build each part.
 
 **Credits:** the engine flame textures come from Ontheheavens' Ship-Editor (public domain), which also inspired the
-engine and slot editing. Inspired by Daedalus Forge. Starsector is © Fractal Softworks; the editor contains no game
+engine and slot editing. Starsector is © Fractal Softworks; the editor contains no game
 files and reads them from your own install.

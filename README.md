@@ -19,7 +19,7 @@ Get the latest zip from the [Releases](../../releases) page:
 | File | What it is |
 |---|---|
 | `Starforge-x.y.z.zip` | Everything: the Java version and the browser version |
-| `Starforge-browser-x.y.z.zip` | Only the browser version (no Java needed) |
+| `Starforge-browser-x.y.z.zip` | Browser only version (No Java needed) |
 | `Starforge-Data-Export-x.y.z.zip` | Optional companion mod that shows the real numbers in hullmod descriptions |
 
 ## Quick start
