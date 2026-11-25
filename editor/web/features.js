@@ -766,3 +766,124 @@ document.addEventListener("load", (e) => {
   }
 }, true);
 document.addEventListener("error", (e) => { if (e.target instanceof HTMLImageElement && e.target.classList.contains("imgf-th")) e.target.style.visibility = "hidden"; }, true);
+
+// ================================================================ resize the ship sprite (and everything placed on it)
+/**
+ * In Starsector one sprite pixel is one unit in game, so a ship's in-game size is its sprite size. Resizing makes a scaled copy
+ * of the image under a new name and scales every position on the hull around its center by the same amount.
+ */
+function scaleHullGeometry(sh, sx, sy) {
+  const s = (sx + sy) / 2;
+  const pt = (a, k = 0) => { a[k] = r2(a[k] * sy); a[k + 1] = r2(a[k + 1] * sx); }; // [forward, left]
+  sh.width = Math.round(sh.width * sx); sh.height = Math.round(sh.height * sy);
+  if (Array.isArray(sh.center)) sh.center = [r2(sh.center[0] * sx), r2(sh.center[1] * sy)];
+  for (const w of sh.weaponSlots || []) {
+    const l = loc(w); for (let k = 0; k + 1 < l.length; k += 2) pt(l, k);
+    if (Array.isArray(w.position) && w.position.length >= 2) pt(w.position);
+  }
+  for (const e of sh.engineSlots || []) {
+    pt(loc(e));
+    for (const k of ["length", "width", "contrailSize"]) if (typeof e[k] === "number") e[k] = r2(e[k] * s);
+  }
+  for (let k = 0; k + 1 < (sh.bounds || []).length; k += 2) pt(sh.bounds, k);
+  if (Array.isArray(sh.shieldCenter)) pt(sh.shieldCenter);
+  if (Array.isArray(sh.moduleAnchor)) pt(sh.moduleAnchor);
+  for (const k of ["shieldRadius", "collisionRadius"]) if (typeof sh[k] === "number") sh[k] = r2(sh[k] * s);
+  if (typeof sh.viewOffset === "number") sh.viewOffset = r2(sh.viewOffset * s);
+}
+/** Good-quality resampling: big reductions go down in halving steps (a single step looks grainy). */
+function resampleImage(img, w, h, sharp) {
+  let src = img, sw = img.naturalWidth, sh = img.naturalHeight;
+  const step = (cw, ch) => {
+    const c = document.createElement("canvas"); c.width = cw; c.height = ch;
+    const x = c.getContext("2d");
+    x.imageSmoothingEnabled = !sharp; x.imageSmoothingQuality = "high";
+    x.drawImage(src, 0, 0, sw, sh, 0, 0, cw, ch);
+    src = c; sw = cw; sh = ch;
+  };
+  if (!sharp) while (sw / 2 >= w && sh / 2 >= h) step(Math.max(w, Math.round(sw / 2)), Math.max(h, Math.round(sh / 2)));
+  step(w, h);
+  return src;
+}
+function resizeSpriteDialog() {
+  const c = S.cur, sh = c.ship;
+  if (c.isSkin) { toast("A skin uses its base hull's slots and engines, so resize the base hull instead (or duplicate this skin as its own hull first).", true); return; }
+  if (!c.img) { toast("The ship's sprite hasn't loaded, so it can't be resized.", true); return; }
+  const W = c.img.naturalWidth, H = c.img.naturalHeight, cur = spriteOf(c);
+  const base = cur.replace(/\.png$/i, "").replace(/_\d+pct$/i, "");
+  const nameFor = (pct) => `${base}_${pct}pct.png`;
+  const others = S.hulls.filter((h) => h.hullId !== c.id && h.spriteName === cur).map((h) => h.hullId);
+  const skins = S.hulls.filter((h) => h.kind === "skin" && h.baseHullId === c.id).map((h) => h.hullId);
+  const modules = (sh.weaponSlots || []).filter((w) => w.type === "STATION_MODULE").length;
+  const notes = [
+    others.length ? `Other hulls use the same image (${others.slice(0, 4).map(esc).join(", ")}${others.length > 4 ? "…" : ""}). They keep the original, because the resized copy gets its own file name.` : "",
+    skins.length ? `Skins of this hull (${skins.slice(0, 4).map(esc).join(", ")}${skins.length > 4 ? "…" : ""}) use these slot and engine positions, so they move too. A skin with its own sprite needs that sprite resized by the same amount.` : "",
+    modules ? `This hull has ${modules} station module slot(s). Their positions scale, but the module hulls themselves don't: resize each module by the same amount.` : "",
+  ].filter(Boolean);
+  openDialog("Resize sprite", "Resize", `
+    <p class="muted" style="margin-top:0">In game, one sprite pixel is one unit, so the sprite's size is the ship's size. This makes a resized copy of the image
+      and scales everything placed on it to match: weapon slots, launch points, engines and their flames, bounds, center, shield and collision radius.
+      Weapon sprites and stats don't change.</p>
+    <div class="form">
+      <label>Scale</label><div class="row" style="gap:6px;align-items:center"><input name="pct" type="number" min="10" max="400" step="1" value="100" style="max-width:90px"> %
+        ${[50, 75, 90, 110, 125, 150].map((p) => `<button type="button" data-pct="${p}">${p}%</button>`).join("")}</div>
+      <label>New size</label><div class="row" style="gap:6px;align-items:center">
+        <input name="w" type="number" min="1" value="${W}" style="max-width:90px"> × <input name="h" type="number" min="1" value="${H}" style="max-width:90px"> px
+        <span class="muted">(now ${W} × ${H})</span></div>
+      <label>Resampling</label><select name="sharp"><option value="">Smooth (best for most sprites)</option><option value="1">Sharp pixels (pixel art, or exact 2× steps)</option></select>
+      <label>Save image as</label><input name="rel" value="${esc(nameFor(100))}">
+    </div>
+    <canvas id="rs-prev" width="520" height="220" style="width:100%;max-width:520px;margin-top:8px;background:#0b1118;border-radius:6px"></canvas>
+    <div class="muted" style="font-size:11px">Faint: current size. Bright: new size, scaled around the ship's center.</div>
+    ${notes.map((n) => `<p class="mm-warn" style="font-size:12px;margin:6px 0">${n}</p>`).join("")}
+    <p class="muted" style="font-size:11px">The image is saved into your Save-to mod with the hull file when you click Save all. Undo (Ctrl+Z) reverses the whole resize.</p>`,
+    async (root) => {
+      const w = Math.round(num(dv(root, "w"))), h = Math.round(num(dv(root, "h")));
+      if (!(w >= 1 && h >= 1)) throw new Error("Enter a width and height of at least 1 pixel.");
+      if (w === W && h === H) throw new Error("That's the current size. Pick a different scale.");
+      if (w > 4096 || h > 4096) throw new Error("That's bigger than 4096 px, which Starsector can't load reliably.");
+      let rel = dv(root, "rel").replace(/\\/g, "/").replace(/^\/+/, "");
+      if (!/\.png$/i.test(rel)) rel += ".png";
+      if (rel.toLowerCase() === cur.toLowerCase()) throw new Error("Choose a new file name: overwriting the current image would change every hull that uses it, and undo couldn't bring it back.");
+      if (await imageSize(asset(rel)).then(() => true, () => false)) throw new Error(`${rel} already exists in the game or a mod. Choose another name.`);
+      const out = resampleImage(c.img, w, h, !!dv(root, "sharp"));
+      const dataUrl = out.toDataURL("image/png");
+      const sx = w / W, sy = h / H;
+      edit(() => { scaleHullGeometry(sh, sx, sy); sh.spriteName = rel; });
+      c.spriteUpload = { rel, dataUrl, base64: dataUrl.split(",")[1] };
+      loadShipSprite(c);
+      scheduleSync();
+      toast(`Resized to ${w} × ${h} px (${Math.round(sx * 100)}%). Review it in Changes, then Save all.`);
+    });
+  const root = $("#dlg-body"), f = (n) => root.querySelector(`[name="${n}"]`);
+  let lastAuto = nameFor(100);
+  const sync = (from) => {
+    let pct = num(f("pct").value) || 100;
+    if (from === "w") pct = (num(f("w").value) || W) / W * 100;
+    if (from === "h") pct = (num(f("h").value) || H) / H * 100;
+    if (from !== "w") f("w").value = Math.max(1, Math.round(W * pct / 100));
+    if (from !== "h") f("h").value = Math.max(1, Math.round(H * pct / 100));
+    if (from !== "pct") f("pct").value = Math.round(pct * 10) / 10;
+    if (f("rel").value === lastAuto) { lastAuto = nameFor(Math.round(pct)); f("rel").value = lastAuto; }
+    preview();
+  };
+  const preview = () => {
+    const cvs = $("#rs-prev"), x = cvs.getContext("2d"), nw = num(f("w").value) || W, nh = num(f("h").value) || H;
+    x.clearRect(0, 0, cvs.width, cvs.height);
+    // ships point up: show them sideways (nose right) so long hulls fit the strip
+    const k = Math.min((cvs.width - 20) / Math.max(H, nh), (cvs.height - 20) / Math.max(W, nw));
+    const cx = cvs.width / 2, cy = cvs.height / 2;
+    const ctr = sh.center || [W / 2, H / 2];
+    const drawAt = (iw, ih, alpha, sxx, syy) => {
+      x.save(); x.globalAlpha = alpha; x.translate(cx, cy); x.rotate(Math.PI / 2);
+      // center of the ship at the canvas center: sprite pixel (center[0], H - center[1]) from the top-left
+      x.drawImage(c.img, -ctr[0] * sxx * k, -(H - ctr[1]) * syy * k, iw * k, ih * k);
+      x.restore();
+    };
+    drawAt(W, H, 0.25, 1, 1);
+    drawAt(nw, nh, 1, nw / W, nh / H);
+  };
+  f("pct").oninput = () => sync("pct"); f("w").oninput = () => sync("w"); f("h").oninput = () => sync("h");
+  root.querySelectorAll("[data-pct]").forEach((b) => (b.onclick = () => { f("pct").value = b.dataset.pct; sync("pct"); }));
+  preview();
+}

@@ -4,7 +4,7 @@ A standalone ship, weapon and mod editor for **Starsector**. It loads the game a
 visually, and saves only into your mods folder.
 
 - **Ships:** weapon slots, engines, bounds, collision and shield centres, variants, built-in weapons, hullmods and wings,
-  skins, station modules, OP budget and stats.
+  skins, station modules, OP budget and stats. Resize a ship's sprite, with everything on it scaled to match.
 - **Weapons:** CSV stats, `.wpn` and `.proj` files, sprites, sounds, and a firing preview for checking animations.
 - **Strike craft, hullmods and ship systems:** CSV editors with descriptions.
 - **Getting it into the game:** faction "known" lists, fleet roles and blueprint tags.

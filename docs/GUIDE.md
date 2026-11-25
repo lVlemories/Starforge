@@ -83,6 +83,12 @@ and zoom. A dot means unsaved changes. Close with ✕ or middle-click.
   same size (or one you name). Then Generate bounds, add slots and engines.
 * **Duplicate hull…** (ship header): copies hull file, stats row, description and optionally the variant
   under a new id. **New skin…** makes a `.skin` of the current hull.
+* **Resize sprite…** (ship header): makes a ship bigger or smaller in game. One sprite pixel is one unit in
+  Starsector, so this saves a resized copy of the image (e.g. `onslaught_75pct.png`, into your Save-to mod) and scales
+  every weapon slot, launch point, engine and flame, the bounds, center, shield and collision radius to match. Pick a
+  percentage or an exact size; **Smooth** suits most sprites, **Sharp pixels** suits pixel art. Weapon sprites and
+  stats are unchanged, and Ctrl+Z undoes the whole resize. For a skin, resize its base hull; for a station, resize
+  each module by the same amount.
 * **New mod…**: creates a mod folder with `mod_info.json`, optional Version Checker files, optionally
   enables it in `enabled_mods.json` (backed up first), and selects it as the Save-to mod.
 

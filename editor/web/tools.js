@@ -742,6 +742,7 @@ const GUIDE = [
   ["New ships, skins and mods", `<ul>
     <li><b>New hull…</b>: give it an id and a sprite (pick one with Browse… or upload a PNG). Then Generate bounds, add slots and engines, and set stats.</li>
     <li><b>Duplicate hull…</b> copies an existing ship; <b>New skin…</b> makes a .skin that only stores differences from its base hull.</li>
+    <li><b>Resize sprite…</b> makes a ship bigger or smaller in game: it saves a resized copy of the image and scales slots, engines, bounds and radii to match.</li>
     <li><b>Getting it into the game</b>: open the ship's <b>Factions & roles…</b>. Tick the factions that should know it, add a saved variant to fleet roles (e.g. combatMedium), and pick blueprint tags. Without this a new ship only exists in the codex/console.</li></ul>`],
   ["Weapons, fighters, hullmods, systems", `<ul>
     <li><b>Weapons</b>: CSV stats with live DPS, the .wpn file (sprites with Browse…, fire points you can drag, visual effects with colour pickers, sounds with ▶) and the projectile/missile.</li>

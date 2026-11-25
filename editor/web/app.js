@@ -893,7 +893,7 @@ function header() {
     <div class="muted" style="font-size:11px;word-break:break-all">${esc(c.file.path || "")}</div>
     <div class="btnrow">
       ${issues.length ? `<button data-act="showChecks" class="${errs ? "chk-err" : "chk-warn"}">${errs ? `⛔ ${errs} error${errs > 1 ? "s" : ""}` : ""}${errs && warns ? " · " : ""}${warns ? `⚠ ${warns} warning${warns > 1 ? "s" : ""}` : ""}</button>` : '<span class="chk-ok">✓ No problems found</span>'}
-      ${c.isSkin ? "" : '<button data-act="dupHull" title="Copy this hull under a new id">Duplicate hull…</button><button data-act="newSkin" title="Create a .skin based on this hull">New skin…</button>'}
+      ${c.isSkin ? "" : '<button data-act="dupHull" title="Copy this hull under a new id">Duplicate hull…</button><button data-act="newSkin" title="Create a .skin based on this hull">New skin…</button><button data-act="resizeSprite" title="Make the ship bigger or smaller in game: resizes the sprite and scales slots, engines, bounds and radii to match">Resize sprite…</button>'}
       <button data-act="factions" title="Make factions know this ship, add its variants to fleet roles and set blueprint tags, so it appears in game">Factions & roles…</button>
       <button data-act="whereUsed" title="Find variants, skins, modules, wings, factions and roles that refer to this hull">Where used</button>
       <button data-act="files" title="Open this ship's files (hull, stats, variant, description, sprite) or show them in their folder">📂 Files</button>
@@ -1509,6 +1509,7 @@ const ACTIONS = {
     if (x.go.sel) { S.sel = x.go.sel; draw(); renderDetail(); }
   },
   dupHull: () => duplicateHullDialog(),
+  resizeSprite: () => resizeSpriteDialog(),
   newSkin: () => newSkinDialog(),
   closePop: () => { S.sel = null; draw(); renderDetail(); },
   clearBounds: () => { if (confirm("Remove all bound points?")) edit(() => { S.cur.ship.bounds = []; S.sel = null; }); },
