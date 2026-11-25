@@ -256,7 +256,7 @@ function setupFirePoints(spritePath) {
     if (!W.view) { const s = Math.max(1, Math.floor(Math.min((cnv.width - 40) / iw, (cnv.height - 40) / ih))); W.view = { s, ox: (cnv.width - iw * s) / 2, oy: (cnv.height - ih * s) / 2 }; }
     const { s, ox, oy } = W.view;
     // checker
-    for (let y = 0; y < ih * s; y += 8) for (let x = 0; x < iw * s; x += 8) { g.fillStyle = ((x + y) / 8) % 2 ? THEME.checkerB : THEME.checkerA; g.fillRect(ox + x, oy + y, Math.min(8, iw * s - x), Math.min(8, ih * s - y)); }
+    drawChecker(ox, oy, iw * s, ih * s, g, cnv.width, cnv.height);
     g.imageSmoothingEnabled = false; g.drawImage(img, ox, oy, iw * s, ih * s);
     const [ax, ay] = fpAnchor(img);
     const toS = (p) => [ox + (ax - p.y) * s, oy + (ay - p.x) * s];

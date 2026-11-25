@@ -503,13 +503,27 @@ function loadWeaponImages() {
   }
 }
 
-function drawChecker(x, y, w, h) {
-  const sz = 8;
-  ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
-  ctx.fillStyle = THEME.checkerA; ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = THEME.checkerB;
-  for (let yy = 0; yy < h; yy += sz) for (let xx = ((yy / sz) % 2) * sz; xx < w; xx += sz * 2) ctx.fillRect(x + xx, y + yy, sz, sz);
-  ctx.restore();
+/**
+ * Transparency checkerboard behind the sprite. One repeating pattern, filled only where the sprite is on screen:
+ * drawing each square separately cost ~150 ms a frame when zoomed in (squares grow with the zoom squared).
+ */
+const checkerPats = new WeakMap(); // canvas context -> {key, pat}
+/** Draws the checkerboard on context g (default: the ship view), clipped to its visible area cw × ch. */
+function drawChecker(x, y, w, h, g = ctx, cw, ch) {
+  const sz = 8, key = THEME.checkerA + "|" + THEME.checkerB;
+  let c = checkerPats.get(g);
+  if (!c || c.key !== key) {
+    const t = document.createElement("canvas"); t.width = t.height = sz * 2;
+    const tg = t.getContext("2d");
+    tg.fillStyle = THEME.checkerA; tg.fillRect(0, 0, sz * 2, sz * 2);
+    tg.fillStyle = THEME.checkerB; tg.fillRect(0, 0, sz, sz); tg.fillRect(sz, sz, sz, sz);
+    c = { key, pat: g.createPattern(t, "repeat") }; checkerPats.set(g, c);
+  }
+  if (cw == null) { const r = g.canvas.getBoundingClientRect(); cw = r.width; ch = r.height; }
+  const x0 = Math.max(x, 0), y0 = Math.max(y, 0), x1 = Math.min(x + w, cw), y1 = Math.min(y + h, ch);
+  if (x1 <= x0 || y1 <= y0) return;
+  c.pat.setTransform(new DOMMatrix([1, 0, 0, 1, x, y])); // squares stay fixed to the sprite while panning
+  g.fillStyle = c.pat; g.fillRect(x0, y0, x1 - x0, y1 - y0);
 }
 
 function draw() {
