@@ -594,7 +594,7 @@ function draw() {
         ctx.restore();
       }
     }
-    if ((on("show-arcs") || selected || m === "slots") && s.arc && s.type !== "LAUNCH_BAY" && s.mount !== "HIDDEN") {
+    if ((on("show-arcs") || selected || m === "slots") && s.arc && s.type !== "LAUNCH_BAY") { // hidden mounts aim within their arc too
       const rad = (12 + 6 * SIZES.indexOf(s.size)) * Math.min(4, Math.max(1, V.scale));
       const ac = THEME.arcMode === "custom" ? THEME.arcColor : col, op = THEME.arcOpacity / 100;
       ctx.fillStyle = hexA(ac, Math.min(1, op * (selected ? 1.6 : 1))); ctx.strokeStyle = hexA(ac, Math.min(1, op * 3 + (selected ? 0.3 : 0))); ctx.lineWidth = selected ? 1.5 : 1;
